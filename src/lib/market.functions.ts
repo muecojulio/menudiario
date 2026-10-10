@@ -70,6 +70,47 @@ function mealNames(payload: unknown): string[] {
     .filter((name): name is string => typeof name === "string" && name.length > 0);
 }
 
+function canUseDatabase(): boolean {
+  const hasDatabase = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL.trim());
+  return hasDatabase || process.env.NODE_ENV !== "production";
+}
+
+async function readCache(): Promise<MarketLive | null> {
+  if (!canUseDatabase()) return null;
+  try {
+    const { getSql } = await import("@/lib/db");
+    const sql = await getSql();
+    const cached = await sql<{ payload: string; fetched_at: string | Date }>`
+      select payload, fetched_at from price_cache where cache_key = ${CACHE_KEY}
+    `;
+    const row = cached[0];
+    if (!row) return null;
+    const fetchedAt = new Date(row.fetched_at).toISOString();
+    const fresh = Date.now() - new Date(fetchedAt).getTime() < SIX_HOURS;
+    if (!fresh) return null;
+    const parsed = JSON.parse(row.payload) as MarketLive;
+    return { ...parsed, fromCache: true, fetchedAt };
+  } catch {
+    return null;
+  }
+}
+
+async function writeCache(live: MarketLive): Promise<void> {
+  if (!canUseDatabase()) return;
+  try {
+    const { getSql } = await import("@/lib/db");
+    const sql = await getSql();
+    await sql`
+      insert into price_cache (cache_key, payload, fetched_at)
+      values (${CACHE_KEY}, ${JSON.stringify(live)}, now())
+      on conflict (cache_key) do update
+        set payload = excluded.payload, fetched_at = now()
+    `;
+  } catch {
+    /* la consulta en vivo sigue aunque la caché falle */
+  }
+}
+
 async function loadFresh(): Promise<MarketLive> {
   const [prices, page2, meals, foods] = await Promise.all([
     readJson("https://prices.openfoodfacts.org/api/v1/prices?currency=MXN&page=1"),
@@ -99,43 +140,20 @@ async function loadFresh(): Promise<MarketLive> {
 }
 
 export const getMarketLive = createServerFn({ method: "GET" }).handler(async (): Promise<MarketLive> => {
+  const cached = await readCache();
+  if (cached) return cached;
   try {
-    const { getSql } = await import("@/lib/db");
-    const sql = await getSql();
-    const cached = await sql<{ payload: string; fetched_at: string | Date }>`
-      select payload, fetched_at from price_cache where cache_key = ${CACHE_KEY}
-    `;
-    const row = cached[0];
-    if (row) {
-      const fetchedAt = new Date(row.fetched_at).toISOString();
-      const fresh = Date.now() - new Date(fetchedAt).getTime() < SIX_HOURS;
-      if (fresh) {
-        const parsed = JSON.parse(row.payload) as MarketLive;
-        return { ...parsed, fromCache: true, fetchedAt };
-      }
-    }
     const live = await loadFresh();
-    if (live.ok) {
-      await sql`
-        insert into price_cache (cache_key, payload, fetched_at)
-        values (${CACHE_KEY}, ${JSON.stringify(live)}, now())
-        on conflict (cache_key) do update
-          set payload = excluded.payload, fetched_at = now()
-      `;
-    }
+    if (live.ok) await writeCache(live);
     return live;
   } catch {
-    try {
-      return await loadFresh();
-    } catch {
-      return {
-        ok: false,
-        fetchedAt: null,
-        fromCache: false,
-        shelf: [],
-        mexicanMeals: [],
-        sources: { openPrices: false, mealDb: false, openFoodFacts: false },
-      };
-    }
+    return {
+      ok: false,
+      fetchedAt: null,
+      fromCache: false,
+      shelf: [],
+      mexicanMeals: [],
+      sources: { openPrices: false, mealDb: false, openFoodFacts: false },
+    };
   }
 });
