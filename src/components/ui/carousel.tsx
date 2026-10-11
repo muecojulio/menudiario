@@ -80,6 +80,7 @@ export function Carousel({
             role="group"
             aria-roledescription="diapositiva"
             aria-label={slideText(index)}
+            aria-current={index === active ? "true" : undefined}
             data-active={index === active}
             className={`carousel-slide shrink-0 snap-start ${slideClassName} md:w-auto`}
           >

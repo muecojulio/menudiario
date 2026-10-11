@@ -6,6 +6,7 @@ import {
   CloudLightning,
   CloudRain,
   CloudSun,
+  Check,
   Flame,
   Leaf,
   Snowflake,
@@ -102,6 +103,7 @@ export function MenuPanel({
               >
                 <span className="flex items-center gap-1.5 font-medium">
                   Día {item.day}
+                  {selected ? <Check size={13} strokeWidth={3} aria-hidden /> : null}
                   {isHoliday ? (
                     <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-clay" />
                   ) : null}

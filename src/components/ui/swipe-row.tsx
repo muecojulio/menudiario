@@ -29,8 +29,7 @@ type RowProps = {
 
 /**
  * Fila con acciones reveladas por deslizamiento hacia la izquierda en táctil.
- * Alternativas: el botón "⋯" abre/cierra las acciones en cualquier dispositivo, y en
- * escritorio las acciones están siempre visibles al pasar el cursor o enfocar la fila.
+ * Alternativas: el botón "⋯" abre/cierra las acciones en táctil; en escritorio están visibles.
  * El deslizamiento no empieza en el botón "⋯" ni en las acciones.
  */
 export function SwipeRow({ id, label, open, onOpenChange, children, actions, trailing }: RowProps) {
@@ -146,7 +145,7 @@ export function SwipeRow({ id, label, open, onOpenChange, children, actions, tra
       ref={rootRef}
       data-no-swipe=""
       data-open={open || undefined}
-      className="swipe-row relative overflow-hidden rounded-2xl"
+      className="swipe-row relative rounded-2xl"
     >
       <div
         className="swipe-surface relative z-10 flex items-stretch gap-2 rounded-2xl bg-surface"
@@ -176,7 +175,8 @@ export function SwipeRow({ id, label, open, onOpenChange, children, actions, tra
         id={`${id}-actions`}
         role="group"
         aria-label={`Acciones de ${label}`}
-        inert={coarse && !open ? true : undefined}
+        aria-hidden={coarse && !open}
+        inert={coarse && !open}
         className="swipe-actions flex items-stretch"
       >
         {actions}

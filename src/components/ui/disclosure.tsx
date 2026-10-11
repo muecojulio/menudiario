@@ -37,7 +37,7 @@ export function Disclosure({
         <ChevronDown
           size={20}
           aria-hidden
-          className={`shrink-0 text-muted transition-transform duration-300 ease-out motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 text-muted transition-transform duration-200 ease-out motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
         />
       </button>
       <div
@@ -45,7 +45,7 @@ export function Disclosure({
         role="region"
         aria-labelledby={buttonId}
         inert={!open}
-        className="grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none"
+        className="grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none"
         style={{ gridTemplateRows: open ? "1fr" : "0fr", opacity: open ? 1 : 0.4 }}
       >
         <div className="min-h-0 overflow-hidden">

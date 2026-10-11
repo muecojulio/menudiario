@@ -49,15 +49,19 @@ export function useHorizontalSwipe<T extends HTMLElement>(
       if (direction === "left") latest.current.onLeft?.();
       else if (direction === "right") latest.current.onRight?.();
     };
+    const onCancel = () => {
+      start = null;
+    };
 
     el.addEventListener("touchstart", onStart, { passive: true });
     el.addEventListener("touchmove", onMove, { passive: true });
     el.addEventListener("touchend", onEnd, { passive: true });
-    el.addEventListener("touchcancel", () => (start = null), { passive: true });
+    el.addEventListener("touchcancel", onCancel, { passive: true });
     return () => {
       el.removeEventListener("touchstart", onStart);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchcancel", onCancel);
     };
   }, [ref]);
 }
