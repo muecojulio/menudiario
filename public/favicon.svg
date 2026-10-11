@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Menú Diario">
-  <rect width="32" height="32" rx="7" fill="#f4f0e6"/>
-  <circle cx="16" cy="14" r="8" fill="#e08a45"/>
-  <path fill="#12110f" d="M0 20h32v5a7 7 0 0 1-7 7H7a7 7 0 0 1-7-7z"/>
+  <rect width="32" height="32" rx="9" fill="#e2efdc"/>
+  <path d="M24 6C14 6 8 11 8 19c0 4 2 7 6 7 7 0 10-8 10-20Z" fill="#397958"/>
+  <path d="M7 27c2-7 7-12 14-17" fill="none" stroke="#fff8eb" stroke-linecap="round" stroke-width="2"/>
+  <circle cx="8" cy="24" r="4" fill="#df5940" stroke="#fff8eb" stroke-width="1.5"/>
 </svg>
