@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { Copy, Download, FileCode, Share2 } from "lucide-react";
+import { Copy, Download, FileCode, Share2, Trash2 } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
 import { useAsyncAction } from "@/lib/use-async-action";
 import { CARD } from "./parts";
@@ -39,7 +39,7 @@ function triggerDownload(href: string, name: string) {
   link.remove();
 }
 
-export function QrPanel() {
+export function QrPanel({ onClear }: { onClear: () => void }) {
   const [url, setUrl] = useState("");
   const [png, setPng] = useState<string | null>(null);
   const [svg, setSvg] = useState<string | null>(null);
@@ -48,6 +48,7 @@ export function QrPanel() {
   const downloadSvg = useAsyncAction();
   const share = useAsyncAction();
   const copy = useAsyncAction();
+  const clear = useAsyncAction();
 
   useEffect(() => {
     setUrl(resolveAppUrl());
@@ -196,6 +197,25 @@ export function QrPanel() {
           errorText="No se pudo copiar"
         >
           Copiar enlace
+        </ActionButton>
+      </div>
+
+      <div className={`${CARD} space-y-3`}>
+        <p className="text-sm text-muted">
+          Elimina el menú guardado y el progreso de compra de este teléfono. Tus preferencias se
+          conservan.
+        </p>
+        <ActionButton
+          variant="danger"
+          status={clear.status}
+          onAction={() => void clear.run(onClear)}
+          icon={<Trash2 size={16} aria-hidden />}
+          loadingText="Borrando…"
+          successText="Plan borrado"
+          errorText="No se pudo borrar"
+          fullWidth
+        >
+          Borrar el plan de este teléfono
         </ActionButton>
       </div>
     </section>

@@ -5,7 +5,6 @@ import {
   parseHolidays,
   parseMealDetail,
   parseMealList,
-  parseRepo,
   parseShelf,
   parseWikiSummary,
   safeImageUrl,
@@ -138,17 +137,4 @@ test("parseForecast alinea los arreglos diarios y descarta días incompletos", (
   assert.equal(days.length, 2);
   assert.deepEqual(days[0], { date: "2026-10-11", tmax: 31.2, tmin: 14, precip: 10, code: 1 });
   assert.equal(days[1]?.code, 61);
-});
-
-test("parseRepo entrega estrellas y licencia; ignora licencia NOASSERTION", () => {
-  const repo = parseRepo({
-    full_name: "muecojulio/menudiario",
-    html_url: "https://github.com/muecojulio/menudiario",
-    stargazers_count: 7,
-    pushed_at: "2026-10-10T12:00:00Z",
-    license: { spdx_id: "NOASSERTION" },
-  });
-  assert.equal(repo?.stars, 7);
-  assert.equal(repo?.license, null);
-  assert.equal(parseRepo({ full_name: "x", html_url: "https://example.com/x" }), null);
 });

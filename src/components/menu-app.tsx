@@ -1,13 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  CalendarRange,
-  QrCode,
-  Refrigerator,
-  ShieldCheck,
-  ShoppingBasket,
-  SlidersHorizontal,
-} from "lucide-react";
+import { CalendarRange, QrCode, Refrigerator, ShieldCheck, ShoppingBasket } from "lucide-react";
 import { matchLivePrices } from "@/lib/catalog";
 import { getMarketLive, type MarketLive } from "@/lib/market.functions";
 import { getHolidays, getWeather, type WeatherResult } from "@/lib/public-api.functions";
@@ -31,14 +24,13 @@ import { useAsyncAction } from "@/lib/use-async-action";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { IngredientSheet } from "./app/detail-sheets";
 import { MenuPanel } from "./app/menu-panel";
-import { MorePanel } from "./app/more-panel";
 import { PlanPanel } from "./app/plan-panel";
 import { QrPanel } from "./app/qr-panel";
 import { ShopPanel } from "./app/shop-panel";
 import { PrivacyContent } from "./app/privacy-content";
 import { Empty } from "./app/parts";
 
-type Tab = "plan" | "menu" | "lista" | "qr" | "privacidad" | "mas";
+type Tab = "plan" | "menu" | "lista" | "qr" | "privacidad";
 
 const TABS: Array<{ value: Tab; label: string; icon: ReactNode }> = [
   { value: "plan", label: "Plan", icon: <CalendarRange size={18} aria-hidden /> },
@@ -46,7 +38,6 @@ const TABS: Array<{ value: Tab; label: string; icon: ReactNode }> = [
   { value: "lista", label: "Lista", icon: <ShoppingBasket size={18} aria-hidden /> },
   { value: "qr", label: "QR", icon: <QrCode size={18} aria-hidden /> },
   { value: "privacidad", label: "Privacidad", icon: <ShieldCheck size={18} aria-hidden /> },
-  { value: "mas", label: "Más", icon: <SlidersHorizontal size={18} aria-hidden /> },
 ];
 
 function readStorage(key: string): string | null {
@@ -190,12 +181,11 @@ export function MenuApp() {
     selectTab("menu");
   }
 
-  function clearAll() {
+  function clearPlan() {
     setPlan(null);
     setChecks([]);
     writeStorage(PLAN_KEY, null);
     writeStorage(CHECK_KEY, null);
-    selectTab("plan");
   }
 
   return (
@@ -255,7 +245,7 @@ export function MenuApp() {
         </PanelFrame>
 
         <PanelFrame value="qr" active={tab === "qr"} motionDirection={panelDirection}>
-          <QrPanel />
+          <QrPanel onClear={clearPlan} />
         </PanelFrame>
 
         <PanelFrame
@@ -278,10 +268,6 @@ export function MenuApp() {
               Abrir esta política en su propia página
             </Link>
           </section>
-        </PanelFrame>
-
-        <PanelFrame value="mas" active={tab === "mas"} motionDirection={panelDirection}>
-          <MorePanel live={live} onClear={clearAll} />
         </PanelFrame>
       </div>
 
