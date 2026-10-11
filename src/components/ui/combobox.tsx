@@ -83,12 +83,25 @@ export function Combobox({
   }
 
   function openList() {
+    setQuery("");
     setOpen(true);
-    const index = filtered.findIndex((option) => option.value === value);
+    const index = options.findIndex((option) => option.value === value);
     setActive(index >= 0 ? index : -1);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    const startsSearch =
+      !open &&
+      query === null &&
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey;
+    if (startsSearch) {
+      // Al teclear desde el valor seleccionado, reemplaza el texto, no lo concatena.
+      event.currentTarget.select();
+      setOpen(true);
+    }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       if (!open) {
@@ -148,6 +161,7 @@ export function Combobox({
           spellCheck={false}
           aria-expanded={open}
           aria-controls={listId}
+          aria-haspopup="listbox"
           aria-autocomplete="list"
           aria-activedescendant={activeOption ? `${id}-opt-${activeOption.value}` : undefined}
           aria-describedby={[`${id}-status`, helper ? `${id}-help` : null]
@@ -158,7 +172,10 @@ export function Combobox({
             const text = event.target.value;
             setQuery(text);
             setOpen(true);
-            setActive(text ? 0 : -1);
+            const firstMatch = options.findIndex((option) =>
+              matchesQuery(`${option.label} ${option.hint ?? ""}`, text),
+            );
+            setActive(text ? firstMatch : -1);
           }}
           onClick={() => {
             if (!open) openList();

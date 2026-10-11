@@ -77,7 +77,7 @@ export function Toggle({
         id={`switch-${title}`}
         checked={checked}
         onCheckedChange={onChange}
-        className="press relative h-8 w-14 shrink-0 rounded-full bg-raise transition-colors duration-200 data-[state=checked]:bg-clay"
+        className="press relative flex h-11 w-14 shrink-0 items-center rounded-full bg-raise transition-colors duration-200 data-[state=checked]:bg-clay"
       >
         <Switch.Thumb className="block h-6 w-6 translate-x-1 rounded-full bg-fg shadow transition-transform duration-200 data-[state=checked]:translate-x-7" />
       </Switch.Root>

@@ -50,13 +50,34 @@ export function ChipRail({
   }, []);
 
   useEffect(() => {
-    update();
     const el = ref.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
-    return () => observer.disconnect();
-  });
+    if (!el) return;
+    update();
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    const observeItems = () => {
+      if (!resizeObserver) return;
+      resizeObserver.disconnect();
+      resizeObserver.observe(el);
+      Array.from(el.children).forEach((child) => resizeObserver.observe(child));
+    };
+    observeItems();
+
+    const mutationObserver =
+      typeof MutationObserver === "undefined"
+        ? null
+        : new MutationObserver(() => {
+            update();
+            observeItems();
+          });
+    mutationObserver?.observe(el, { childList: true, subtree: true, characterData: true });
+
+    return () => {
+      resizeObserver?.disconnect();
+      mutationObserver?.disconnect();
+    };
+  }, [update]);
 
   useEffect(() => {
     const el = ref.current;
@@ -76,7 +97,7 @@ export function ChipRail({
     const items = Array.from(el.querySelectorAll<HTMLElement>('[role="radio"],[role="tab"]'));
     const current = items.indexOf(document.activeElement as HTMLElement);
     if (current < 0) return;
-    const next = nextIndex(current, event.key, items.length, "both");
+    const next = nextIndex(current, event.key, items.length, "horizontal");
     if (next === null) return;
     event.preventDefault();
     items[next]?.focus();
@@ -90,6 +111,7 @@ export function ChipRail({
         role={role}
         onKeyDown={onKeyDown}
         aria-label={label}
+        aria-orientation={role === "group" ? undefined : "horizontal"}
         data-no-swipe=""
         onScroll={update}
         data-fade-start={edges.start}

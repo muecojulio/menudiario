@@ -73,7 +73,7 @@ export function ActionButton({
         onClick={() => {
           if (status !== "loading") onAction();
         }}
-        className={`press inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium ${VARIANT[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
+        className={`press inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none ${VARIANT[variant]} ${fullWidth ? "w-full" : ""} ${className}`}
       >
         {glyph}
         <span>{label}</span>

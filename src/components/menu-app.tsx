@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarRange,
@@ -25,7 +25,7 @@ import {
   readPrefs,
   type Prefs,
 } from "@/lib/storage";
-import { scrollBehavior } from "@/lib/use-media";
+import { prefersReducedMotion, scrollBehavior } from "@/lib/use-media";
 import { useHorizontalSwipe } from "@/lib/use-swipe";
 import { useAsyncAction } from "@/lib/use-async-action";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -86,6 +86,8 @@ function toInput(prefs: Prefs, live: PlanInput["live"]): PlanInput | null {
 
 export function MenuApp() {
   const [tab, setTab] = useState<Tab>("plan");
+  const tabRef = useRef<Tab>("plan");
+  const [panelDirection, setPanelDirection] = useState<"forward" | "back">("forward");
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [plan, setPlan] = useState<PlanResult | null>(null);
   const [ready, setReady] = useState(false);
@@ -158,9 +160,18 @@ export function MenuApp() {
   const floor = useMemo(() => (draft ? minimumBudget(draft) : null), [draft]);
   const tabIndex = TABS.findIndex((item) => item.value === tab);
 
+  function selectTab(next: Tab) {
+    const previousIndex = TABS.findIndex((item) => item.value === tabRef.current);
+    const nextIndex = TABS.findIndex((item) => item.value === next);
+    if (previousIndex === nextIndex) return;
+    setPanelDirection(nextIndex > previousIndex ? "forward" : "back");
+    tabRef.current = next;
+    setTab(next);
+  }
+
   useHorizontalSwipe(mainRef, {
-    onLeft: () => setTab(TABS[Math.min(TABS.length - 1, tabIndex + 1)]!.value),
-    onRight: () => setTab(TABS[Math.max(0, tabIndex - 1)]!.value),
+    onLeft: () => selectTab(TABS[Math.min(TABS.length - 1, tabIndex + 1)]!.value),
+    onRight: () => selectTab(TABS[Math.max(0, tabIndex - 1)]!.value),
   });
 
   function update(partial: Partial<Prefs>) {
@@ -176,7 +187,7 @@ export function MenuApp() {
     setDay(1);
     setChecks([]);
     setNotice(null);
-    setTab("menu");
+    selectTab("menu");
   }
 
   function clearAll() {
@@ -184,7 +195,7 @@ export function MenuApp() {
     setChecks([]);
     writeStorage(PLAN_KEY, null);
     writeStorage(CHECK_KEY, null);
-    setTab("plan");
+    selectTab("plan");
   }
 
   return (
@@ -202,8 +213,8 @@ export function MenuApp() {
         </div>
       </header>
 
-      <div ref={mainRef}>
-        <PanelFrame value="plan" active={tab === "plan"}>
+      <div ref={mainRef} className="relative">
+        <PanelFrame value="plan" active={tab === "plan"} motionDirection={panelDirection}>
           <PlanPanel
             prefs={prefs}
             update={update}
@@ -217,7 +228,7 @@ export function MenuApp() {
           />
         </PanelFrame>
 
-        <PanelFrame value="menu" active={tab === "menu"}>
+        <PanelFrame value="menu" active={tab === "menu"} motionDirection={panelDirection}>
           {plan ? (
             <MenuPanel
               plan={plan}
@@ -229,25 +240,29 @@ export function MenuApp() {
               meals={live?.meals ?? []}
             />
           ) : (
-            <Empty onPlan={() => setTab("plan")} />
+            <Empty onPlan={() => selectTab("plan")} />
           )}
         </PanelFrame>
 
-        <PanelFrame value="lista" active={tab === "lista"}>
+        <PanelFrame value="lista" active={tab === "lista"} motionDirection={panelDirection}>
           <ShopPanel
             plan={plan}
             checks={checks}
             onChecks={setChecks}
             onInfo={setIngredient}
-            onEmptyAction={() => setTab("plan")}
+            onEmptyAction={() => selectTab("plan")}
           />
         </PanelFrame>
 
-        <PanelFrame value="qr" active={tab === "qr"}>
+        <PanelFrame value="qr" active={tab === "qr"} motionDirection={panelDirection}>
           <QrPanel />
         </PanelFrame>
 
-        <PanelFrame value="privacidad" active={tab === "privacidad"}>
+        <PanelFrame
+          value="privacidad"
+          active={tab === "privacidad"}
+          motionDirection={panelDirection}
+        >
           <section className="px-5 py-5">
             <h2 className="font-display text-4xl text-fg">Privacidad</h2>
             <p className="mt-2 text-sm text-muted">
@@ -265,7 +280,7 @@ export function MenuApp() {
           </section>
         </PanelFrame>
 
-        <PanelFrame value="mas" active={tab === "mas"}>
+        <PanelFrame value="mas" active={tab === "mas"} motionDirection={panelDirection}>
           <MorePanel live={live} onClear={clearAll} />
         </PanelFrame>
       </div>
@@ -281,10 +296,11 @@ export function MenuApp() {
             label="Secciones de la app"
             options={TABS}
             value={tab}
-            onChange={setTab}
+            onChange={selectTab}
             controlsFor={(value) => `panel-${value}`}
-            className="gap-0"
-            itemClassName="flex-col gap-0.5 px-0 py-1.5 text-[11px] leading-tight"
+            scrollable
+            className="min-w-0 gap-0"
+            itemClassName="w-16 flex-none flex-col gap-0.5 px-0 py-1.5 text-[11px] leading-tight"
             selectedClassName="text-clay"
             idleClassName="text-muted"
             indicatorClassName="bg-clay-soft"
@@ -300,22 +316,76 @@ export function MenuApp() {
   );
 }
 
-/** Marco de pestaña: mantiene los paneles montados para que los ids de aria-controls existan siempre. */
+const PANEL_TRANSITION_MS = 220;
+
+/** Mantiene los paneles montados y animables, pero inertes desde que dejan de estar activos. */
 function PanelFrame({
   value,
   active,
+  motionDirection,
   children,
 }: {
   value: Tab;
   active: boolean;
+  motionDirection: "forward" | "back";
   children: ReactNode;
 }) {
+  const firstEffect = useRef(true);
+  const visibleRef = useRef(active);
+  const [visible, setVisible] = useState(active);
+  const [phase, setPhase] = useState<"active" | "inactive" | "enter" | "exit">(
+    active ? "active" : "inactive",
+  );
+
+  useLayoutEffect(() => {
+    if (firstEffect.current) {
+      firstEffect.current = false;
+      return;
+    }
+
+    let frame: number | undefined;
+    let timer: number | undefined;
+    if (active) {
+      visibleRef.current = true;
+      setVisible(true);
+      if (prefersReducedMotion()) {
+        setPhase("active");
+      } else {
+        setPhase("enter");
+        frame = requestAnimationFrame(() => setPhase("active"));
+      }
+    } else if (visibleRef.current) {
+      if (prefersReducedMotion()) {
+        visibleRef.current = false;
+        setVisible(false);
+        setPhase("inactive");
+      } else {
+        setPhase("exit");
+        timer = window.setTimeout(() => {
+          visibleRef.current = false;
+          setVisible(false);
+          setPhase("inactive");
+        }, PANEL_TRANSITION_MS);
+      }
+    }
+
+    return () => {
+      if (frame !== undefined) cancelAnimationFrame(frame);
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, [active]);
+
   return (
     <div
       id={`panel-${value}`}
       role="tabpanel"
       aria-labelledby={`app-tab-${value}`}
-      hidden={!active}
+      aria-hidden={!active}
+      inert={!active}
+      hidden={!visible}
+      data-phase={phase}
+      data-direction={motionDirection}
+      className="tab-panel"
       tabIndex={0}
     >
       {children}
