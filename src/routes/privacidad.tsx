@@ -1,15 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PrivacyContent } from "@/components/privacy-content";
+import { PrivacyContent } from "@/components/app/privacy-content";
 
 export const Route = createFileRoute("/privacidad")({ component: Privacy });
 
 function Privacy() {
   return (
-    <main className="mx-auto min-h-screen max-w-3xl px-5 py-8 pb-16 sm:px-8">
-      <Link to="/" className="back-link">
-        ← Volver a Menú Diario
+    <main className="mx-auto min-h-screen max-w-lg px-5 py-8 pb-16">
+      <Link to="/" className="inline-flex min-h-11 items-center text-sm text-clay">
+        Volver a la app
       </Link>
-      <PrivacyContent />
+      <h1 className="mt-2 font-display text-4xl text-fg">Privacidad</h1>
+      <div className="mt-6">
+        <PrivacyContent />
+      </div>
     </main>
   );
 }

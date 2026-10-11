@@ -1,4 +1,6 @@
-export type Store = {
+import type { ShelfItem } from "./public-api/parsers.ts";
+
+type Store = {
   id: string;
   name: string;
   factor: number;
@@ -51,7 +53,7 @@ export const AISLE_ORDER = [
   "Bebidas",
 ];
 
-export const INGREDIENTS: Ingredient[] = [
+const INGREDIENTS: Ingredient[] = [
   { id: "huevo", name: "Huevo blanco", aisle: "Huevos y lácteos", packSize: 12, unit: "pza", packLabel: "caja de 12", price: 54, liveKeys: ["huevo"], band: [40, 85] },
   { id: "leche", name: "Leche entera", aisle: "Huevos y lácteos", packSize: 1000, unit: "ml", packLabel: "1 L", price: 29, liveKeys: ["leche"], band: [20, 42] },
   { id: "yogurt", name: "Yogurt natural", aisle: "Huevos y lácteos", packSize: 1000, unit: "g", packLabel: "1 kg", price: 46, liveKeys: ["yogurt natural", "yoghurt natural"], band: [36, 68] },
@@ -92,6 +94,60 @@ export const INGREDIENTS: Ingredient[] = [
   { id: "tostada", name: "Tostadas", aisle: "Pan y tortillas", packSize: 10, unit: "pza", packLabel: "bolsa 10 pzas", price: 22, liveKeys: ["tostada"], band: [14, 36] },
   { id: "refresco", name: "Refresco de cola", aisle: "Bebidas", packSize: 600, unit: "ml", packLabel: "600 ml", price: 22, liveKeys: ["coca", "cola"], band: [14, 32] },
 ];
+
+/**
+ * Título del artículo de Wikipedia en español para la ficha de cada ingrediente.
+ * Si Wikipedia no tiene el título exacto, la ficha dice que no hay información.
+ */
+const WIKI_TITLES: Record<string, string> = {
+  huevo: "Huevo",
+  leche: "Leche",
+  yogurt: "Yogur",
+  queso: "Queso",
+  oaxaca: "Queso Oaxaca",
+  jamon: "Jamón",
+  crema: "Crema",
+  pechuga: "Pollo",
+  pierna: "Muslo",
+  jitomate: "Tomate",
+  cebolla: "Cebolla",
+  chile: "Chile",
+  cilantro: "Coriandrum sativum",
+  limon: "Limón",
+  platano: "Plátano",
+  manzana: "Manzana",
+  nopal: "Nopal",
+  papa: "Solanum tuberosum",
+  zanahoria: "Zanahoria",
+  lechuga: "Lechuga",
+  pepino: "Pepino",
+  frijol: "Frijol",
+  arroz: "Arroz",
+  avena: "Avena",
+  aceite: "Aceite vegetal",
+  jamaica: "Hibiscus sabdariffa",
+  azucar: "Azúcar",
+  atun: "Atún",
+  pasta: "Pasta",
+  lenteja: "Lenteja",
+  gelatina: "Gelatina",
+  caldo: "Consomé",
+  sal: "Sal de mesa",
+  salsa: "Salsa picante",
+  tortilla: "Tortilla de maíz",
+  pan: "Pan de molde",
+  bolillo: "Bolillo",
+  tostada: "Tostada",
+  refresco: "Refresco",
+};
+
+export function ingredientWikiTitle(id: string): string | null {
+  return WIKI_TITLES[id] ?? null;
+}
+
+export function ingredientExists(id: string): boolean {
+  return byId.has(id);
+}
 
 const byId = new Map(INGREDIENTS.map((item) => [item.id, item]));
 
@@ -448,13 +504,6 @@ export const RECIPES: Recipe[] = [
 ];
 
 export const recipeById = new Map(RECIPES.map((recipe) => [recipe.id, recipe]));
-
-export type ShelfItem = {
-  name: string;
-  price: number;
-  store: string;
-  date: string;
-};
 
 export type LivePrice = {
   price: number;

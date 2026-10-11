@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { fetchJson } from "./public-api/http.server.ts";
+import { PUBLIC_SOURCES } from "./public-api/sources.ts";
 
 export type FoodProduct = {
   name: string;
@@ -20,7 +22,6 @@ export type FoodSearchResult = {
   issue: "no-results" | "unavailable" | "rate-limited" | null;
 };
 
-const AGENT = "Menudiario/1.0 (https://github.com/muecojulio/menudiario)";
 const CACHE_TIME = 30 * 60 * 1000;
 const CACHE_LIMIT = 60;
 const RATE_WINDOW = 60 * 1000;
@@ -99,25 +100,15 @@ function trimCache(now: number): void {
 }
 
 async function fetchProducts(query: string): Promise<FoodSearchResult> {
-  const params = new URLSearchParams({
-    search_terms: query,
-    search_simple: "1",
-    action: "process",
-    json: "1",
-    page_size: "6",
-    lc: "es",
-    cc: "mx",
-    fields: "product_name,brands,quantity,nutriscore_grade,nutrition_grade_fr,nutriments,code",
-  });
   try {
-    const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?${params}`, {
-      headers: { Accept: "application/json", "User-Agent": AGENT },
-      signal: AbortSignal.timeout(8000),
+    const payload = await fetchJson(PUBLIC_SOURCES.openFoodFactsSearch(query), {
+      allowedHosts: ["world.openfoodfacts.org"],
+      timeoutMs: 8000,
     });
-    if (!response.ok) {
+    if (payload === null) {
       return { ok: false, query, products: [], cached: false, issue: "unavailable" };
     }
-    const products = parseProducts((await response.json()) as unknown);
+    const products = parseProducts(payload);
     return {
       ok: products.length > 0,
       query,

@@ -279,7 +279,7 @@ function tokenIdentityKey(token: string): string {
         }
       }
     } catch {
-      // Non-JWT or malformed tokens safely fall back to their opaque hash below.
+      // Un token mal formado no tiene identidad de equipo: se usa el hash del token completo.
     }
   }
   return createHash("sha256").update(token).digest("base64url");
