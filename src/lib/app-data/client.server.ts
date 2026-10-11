@@ -278,7 +278,9 @@ function tokenIdentityKey(token: string): string {
             .digest("base64url");
         }
       }
-    } catch {}
+    } catch {
+      // Un token mal formado no tiene identidad de equipo: se usa el hash del token completo.
+    }
   }
   return createHash("sha256").update(token).digest("base64url");
 }
