@@ -16,6 +16,7 @@ export type MarketLive = {
   ok: boolean;
   fetchedAt: string | null;
   fromCache: boolean;
+  stale: boolean;
   shelf: ShelfItem[];
   meals: MealCard[];
   sources: {
@@ -32,6 +33,7 @@ const EMPTY: MarketLive = {
   ok: false,
   fetchedAt: null,
   fromCache: false,
+  stale: false,
   shelf: [],
   meals: [],
   sources: { openPrices: false, mealDb: false, openFoodFacts: false },
@@ -53,6 +55,7 @@ async function loadFresh(): Promise<MarketLive | null> {
     ok: shelf.length > 0 || mealCards.length > 0 || openFoodFacts,
     fetchedAt: new Date().toISOString(),
     fromCache: false,
+    stale: false,
     shelf,
     meals: mealCards,
     sources: {
@@ -75,6 +78,12 @@ export const getMarketLive = createServerFn({ method: "GET" }).handler(
   async (): Promise<MarketLive> => {
     const cached = await cachedLoad(CACHE_KEY, SIX_HOURS, loadFresh, asMarket);
     if (!cached) return EMPTY;
-    return { ...cached.data, ok: true, fetchedAt: cached.fetchedAt, fromCache: cached.fromCache };
+    return {
+      ...cached.data,
+      ok: true,
+      fetchedAt: cached.fetchedAt,
+      fromCache: cached.fromCache,
+      stale: Date.now() - Date.parse(cached.fetchedAt) >= SIX_HOURS,
+    };
   },
 );

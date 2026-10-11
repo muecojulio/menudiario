@@ -202,7 +202,7 @@ export function MenuApp() {
           </span>
           <div>
             <p className="font-display text-2xl leading-none text-fg">Menú Diario</p>
-            <p className="mt-1 text-sm text-muted">Come simple. Compra lo justo.</p>
+            <p className="mt-1 text-sm text-muted">Hecho para tu mesa y tu bolsillo.</p>
           </div>
         </div>
       </header>

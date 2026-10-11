@@ -145,7 +145,7 @@ export function ShelfNote({ live, matches }: { live: MarketLive | null; matches:
   return (
     <p className="text-sm text-muted">
       Fuentes vivas: {bits.join(", ")}
-      {live.fromCache ? " (caché reciente)" : ""}.
+      {live.stale ? " (respaldo de hasta 7 días)" : live.fromCache ? " (caché reciente)" : ""}.
       {matches > 0 ? ` ${matches} precios coinciden con la despensa.` : ""}
     </p>
   );

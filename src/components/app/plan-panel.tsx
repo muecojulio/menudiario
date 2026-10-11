@@ -34,7 +34,15 @@ export function PlanPanel({
 }) {
   return (
     <section className="space-y-6 px-5 py-5">
-      <div className="rise">
+      <header className="plan-hero rise">
+        <p className="plan-hero-kicker">Menú de temporada · a tu medida</p>
+        <h1>Más sabor. Menos vueltas.</h1>
+        <p className="plan-hero-copy">
+          Comidas ricas, presupuesto claro y una lista lista para llevar.
+        </p>
+      </header>
+
+      <div className="rise delay-1">
         <SegmentedControl
           id="budget-mode"
           mode="radio"
@@ -62,7 +70,7 @@ export function PlanPanel({
         />
       </div>
 
-      <div className="rise delay-1 grid grid-cols-2 gap-3">
+      <div className="rise delay-2 grid grid-cols-2 gap-3">
         <Stepper
           label="Días"
           value={prefs.days}
@@ -79,7 +87,7 @@ export function PlanPanel({
         />
       </div>
 
-      <div className={`rise delay-2 space-y-3 ${CARD}`}>
+      <div className={`rise delay-3 space-y-3 ${CARD}`}>
         <Toggle
           title="Desayuno"
           detail="Algo rápido de armar"

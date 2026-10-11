@@ -6,6 +6,7 @@ import type { MarketLive } from "@/lib/market.functions";
 import { ActionButton } from "@/components/ui/action-button";
 import { useAsyncAction } from "@/lib/use-async-action";
 import { Disclosure } from "@/components/ui/disclosure";
+import { FoodSearch } from "@/components/food-search";
 import { CARD, ExternalLink, ShelfNote } from "./parts";
 
 const REPO_URL = "https://github.com/muecojulio/menudiario";
@@ -37,6 +38,8 @@ export function MorePanel({
   return (
     <section className="space-y-5 px-5 py-5 text-sm leading-6 text-muted">
       <h2 className="font-display text-4xl text-fg">Más</h2>
+
+      <FoodSearch />
 
       <div className={`${CARD} space-y-3`}>
         <p className="flex items-center gap-2 text-fg">

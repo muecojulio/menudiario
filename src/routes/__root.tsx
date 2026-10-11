@@ -16,7 +16,7 @@ export const Route = createRootRoute({
         content:
           "Arma desayuno, comida y cena con tu presupuesto y la lista exacta para el supermercado.",
       },
-      { name: "theme-color", content: "#12110f" },
+      { name: "theme-color", content: "#fff8eb" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

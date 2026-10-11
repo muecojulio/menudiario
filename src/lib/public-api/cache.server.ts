@@ -7,13 +7,14 @@
  *     para purgar filas vencidas sin recorrer toda la tabla.
  *
  * Las peticiones simultáneas a la misma clave comparten una sola consulta externa.
- * Si la fuente no responde, se devuelve la última copia guardada (aunque esté vencida).
+ * Si la fuente no responde, se sirve la última copia mientras tenga como máximo siete días.
  * Nada de lo que se guarda aquí pertenece a una persona.
  */
 
 const MAX_MEMORY_ENTRIES = 300;
 const PURGE_EVERY_MS = 60 * 60 * 1000;
 const PURGE_OLDER_THAN_DAYS = 7;
+const MAX_STALE_AGE_MS = PURGE_OLDER_THAN_DAYS * 24 * 60 * 60 * 1000;
 
 type MemoryEntry = { value: unknown; fetchedAt: string; expires: number };
 
@@ -84,17 +85,24 @@ export async function cachedLoad<T>(
   load: () => Promise<T | null>,
   parse: (raw: unknown) => T | null = (raw) => raw as T,
 ): Promise<Cached<T> | null> {
+  const now = Date.now();
   const hit = memory.get(key);
-  if (hit && hit.expires > Date.now()) {
+  const memoryAgeMs = hit ? now - Date.parse(hit.fetchedAt) : Number.POSITIVE_INFINITY;
+  if (hit && hit.expires > now && memoryAgeMs >= 0 && memoryAgeMs <= MAX_STALE_AGE_MS) {
     return { data: hit.value as T, fetchedAt: hit.fetchedAt, fromCache: true };
   }
 
   const row = await readRow(key);
-  if (row && Date.now() - Date.parse(row.fetchedAt) < ttlMs) {
-    const parsed = parse(JSON.parse(row.payload));
-    if (parsed !== null) {
-      remember(key, parsed, ttlMs, row.fetchedAt);
-      return { data: parsed, fetchedAt: row.fetchedAt, fromCache: true };
+  const ageMs = row ? now - Date.parse(row.fetchedAt) : Number.POSITIVE_INFINITY;
+  if (row && ageMs >= 0 && ageMs < ttlMs) {
+    try {
+      const parsed = parse(JSON.parse(row.payload));
+      if (parsed !== null) {
+        remember(key, parsed, ttlMs, row.fetchedAt);
+        return { data: parsed, fetchedAt: row.fetchedAt, fromCache: true };
+      }
+    } catch {
+      /* fila corrupta: se ignora */
     }
   }
 
@@ -113,7 +121,7 @@ export async function cachedLoad<T>(
     return { data: fresh, fetchedAt, fromCache: false };
   }
 
-  if (row) {
+  if (row && ageMs >= 0 && ageMs <= MAX_STALE_AGE_MS) {
     try {
       const stale = parse(JSON.parse(row.payload));
       if (stale !== null) return { data: stale, fetchedAt: row.fetchedAt, fromCache: true };

@@ -3,15 +3,17 @@
 @import "@fontsource-variable/outfit/wght.css";
 
 @theme {
-  --color-bg: #12110f;
-  --color-surface: #1c1916;
-  --color-raise: color-mix(in srgb, #f4f0e6 6%, #1c1916);
-  --color-fg: #f4f0e6;
-  --color-muted: #a39b8e;
-  --color-line: color-mix(in srgb, #f4f0e6 14%, transparent);
-  --color-clay: #e08a45;
-  --color-clay-soft: color-mix(in srgb, #e08a45 18%, #1c1916);
-  --color-chile: #d9583f;
+  --color-bg: #fff8eb;
+  --color-surface: #fffefa;
+  --color-raise: #f6efdf;
+  --color-fg: #26382f;
+  --color-muted: #6f7d72;
+  --color-line: #e6dece;
+  --color-clay: #df5940;
+  --color-clay-soft: #ffebe3;
+  --color-chile: #b74432;
+  --color-leaf: #397958;
+  --color-mango: #f4c44f;
   --font-sans: "Outfit Variable", "Outfit", system-ui, sans-serif;
   --font-display: "Fraunces Variable", "Fraunces", Georgia, serif;
   --animate-fade-in: fade-in 200ms ease-out both;
@@ -22,15 +24,20 @@
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
     overflow-x: hidden;
+    scroll-behavior: smooth;
   }
 
   body {
     margin: 0;
     min-height: 100vh;
     overflow-x: hidden;
-    background: var(--color-bg);
+    background-color: var(--color-bg);
+    background-image:
+      radial-gradient(ellipse at 7% 4%, rgb(249 220 158 / 20%), transparent 30rem),
+      radial-gradient(ellipse at 95% 17%, rgb(220 239 221 / 24%), transparent 32rem);
+    background-attachment: fixed;
     color: var(--color-fg);
     font-family: var(--font-sans);
     font-size: 16px;
@@ -242,6 +249,132 @@
     .swipe-toggle {
       display: none;
     }
+  }
+}
+
+:root {
+  --shadow-card: 0 12px 34px rgb(64 51 31 / 7%);
+  --shadow-float: 0 24px 64px rgb(58 69 44 / 16%);
+}
+
+@layer components {
+  .rounded-2xl.bg-surface {
+    border: 1px solid var(--color-line);
+    box-shadow: var(--shadow-card);
+  }
+
+  .plan-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 190px;
+    padding: 1.5rem;
+    border-radius: 1.75rem;
+    color: #fffdf4;
+    background:
+      radial-gradient(circle at 88% 16%, rgb(244 196 79 / 75%) 0 0.42rem, transparent 0.5rem),
+      radial-gradient(circle at 94% 76%, rgb(255 253 244 / 16%) 0 4.1rem, transparent 4.2rem),
+      linear-gradient(130deg, #285b43 0%, #397958 62%, #59845a 100%);
+    box-shadow: 0 22px 42px -28px rgb(37 81 58 / 65%);
+  }
+
+  .plan-hero::before {
+    position: absolute;
+    z-index: -1;
+    top: -2.5rem;
+    right: -1.1rem;
+    width: 10.5rem;
+    height: 10.5rem;
+    border: 1px solid rgb(255 253 244 / 22%);
+    border-radius: 50%;
+    content: "";
+  }
+
+  .plan-hero::after {
+    position: absolute;
+    z-index: -1;
+    right: 2.2rem;
+    bottom: -4.8rem;
+    width: 9rem;
+    height: 9rem;
+    border: 1px solid rgb(255 253 244 / 18%);
+    border-radius: 42% 58% 60% 40%;
+    content: "";
+    transform: rotate(-24deg);
+  }
+
+  .plan-hero-kicker {
+    margin: 0;
+    color: #f8d782;
+    font-size: 0.7rem;
+    font-weight: 750;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .plan-hero h1 {
+    max-width: 18rem;
+    margin: 0.7rem 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.1rem, 9vw, 2.7rem);
+    font-weight: 650;
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+  }
+
+  .plan-hero-copy {
+    max-width: 20rem;
+    margin: 0.75rem 0 0;
+    color: rgb(255 253 244 / 84%);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .food-search-card {
+    border: 1px solid var(--color-line);
+    border-radius: 1.5rem;
+    background: linear-gradient(145deg, var(--color-surface), #fff3df);
+    box-shadow: var(--shadow-card);
+  }
+
+  .food-result-card {
+    border: 1px solid var(--color-line);
+    border-radius: 1rem;
+    background: var(--color-surface);
+    padding: 0.85rem;
+  }
+
+  .nutri-score {
+    display: grid;
+    min-width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 0.65rem;
+    color: #fff;
+    font-weight: 800;
+  }
+
+  .grade-a { background: #13844a; }
+  .grade-b { background: #70a63e; }
+  .grade-c { background: #e4b832; color: #26382f; }
+  .grade-d { background: #e38735; }
+  .grade-e { background: #c9513e; }
+
+  .food-source-link {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--color-leaf);
+    font-size: 0.75rem;
+    font-weight: 650;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.2em;
+  }
+
+  .food-source-link:hover {
+    text-decoration-color: currentColor;
   }
 }
 

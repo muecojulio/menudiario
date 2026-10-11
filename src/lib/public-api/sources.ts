@@ -18,6 +18,19 @@ export const PUBLIC_SOURCES = {
     `https://prices.openfoodfacts.org/api/v1/prices?currency=MXN&page=${page}`,
   openFoodFactsCount: (term: string) =>
     `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(term)}&search_simple=1&action=process&json=1&page_size=1&cc=mx`,
+  openFoodFactsSearch: (term: string) => {
+    const params = new URLSearchParams({
+      search_terms: term,
+      search_simple: "1",
+      action: "process",
+      json: "1",
+      page_size: "6",
+      lc: "es",
+      cc: "mx",
+      fields: "product_name,brands,quantity,nutriscore_grade,nutrition_grade_fr,nutriments,code",
+    });
+    return `https://world.openfoodfacts.org/cgi/search.pl?${params}`;
+  },
   mealDbMexican: "https://www.themealdb.com/api/json/v1/1/filter.php?a=Mexican",
   mealDbLookup: (id: string) => `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`,
   weather: (city: City, days: number) =>

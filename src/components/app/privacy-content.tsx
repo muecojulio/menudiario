@@ -10,8 +10,8 @@ export function PrivacyContent({ compact = false }: { compact?: boolean }) {
     <div className="space-y-6 text-sm leading-6 text-muted">
       <p className="text-fg">
         Menú Diario no pide cuenta, no usa cookies de seguimiento y no tiene analítica ni
-        publicidad. Tu presupuesto, las personas en casa, tu ciudad y la lista de compras se quedan
-        en este teléfono.
+        publicidad. Tu presupuesto, las personas, el menú y la lista se quedan en este teléfono. La
+        ciudad solo sirve para consultar el clima con coordenadas predefinidas.
       </p>
       <p className="text-xs">Última actualización: {PRIVACY_UPDATED}.</p>
 
@@ -33,8 +33,9 @@ export function PrivacyContent({ compact = false }: { compact?: boolean }) {
       <section className="space-y-2">
         <h2 className={heading}>Qué consultamos en internet</h2>
         <p>
-          El servidor de la app consulta fuentes públicas, sin clave ni registro. Las consultas solo
-          llevan datos generales, nunca tu nombre, tu presupuesto ni tu ubicación:
+          El servidor consulta fuentes públicas sin clave ni registro. El presupuesto, el menú y la
+          lista no se envían a esos servicios. La ciudad elegida se usa solo para pedir un pronóstico
+          por coordenadas de una lista fija; no usamos el GPS:
         </p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
@@ -45,8 +46,8 @@ export function PrivacyContent({ compact = false }: { compact?: boolean }) {
             <span className="text-fg">Nager.Date</span>: días festivos de México.
           </li>
           <li>
-            <span className="text-fg">Open Prices y Open Food Facts</span> (ODbL): precios y
-            productos de anaquel.
+            <span className="text-fg">Open Prices y Open Food Facts</span> (ODbL): precios,
+            productos de anaquel y etiquetas nutricionales.
           </li>
           <li>
             <span className="text-fg">TheMealDB</span>: ideas de recetas mexicanas.
@@ -60,9 +61,15 @@ export function PrivacyContent({ compact = false }: { compact?: boolean }) {
           </li>
         </ul>
         <p>
-          Como cualquier servicio en internet, cada proveedor puede ver la dirección IP del servidor
-          que hace la consulta, no la tuya. Las imágenes y enlaces externos solo se aceptan desde
-          dominios permitidos.
+          Si usas “Explora etiquetas”, el término de producto que escribiste se envía a nuestro
+          servidor y desde ahí a Open Food Facts; no escribas datos personales en ese campo. La
+          búsqueda no incluye presupuesto, menú ni lista. Su respuesta se conserva solo en memoria
+          del servidor hasta 30 minutos y no se persiste en la base de datos.
+        </p>
+        <p>
+          Las APIs consultadas desde el servidor reciben su IP; al cargar una imagen o abrir un
+          enlace externo, ese proveedor también puede recibir datos técnicos de tu navegador. Las
+          imágenes y enlaces se limitan a dominios permitidos.
         </p>
       </section>
 

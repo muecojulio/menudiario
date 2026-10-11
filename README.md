@@ -17,19 +17,19 @@ Se puede cambiar de pestaña tocando, con el mouse, con el teclado (flechas, Ini
 
 ## APIs públicas
 
-Todas se consultan desde el servidor, sin clave ni registro. Las consultas solo llevan datos generales (nunca nombre, presupuesto ni ubicación) y la ciudad sale de una lista fija.
+Todas se consultan desde el servidor, sin clave ni registro. El presupuesto, el menú y la lista no se envían a las fuentes. La ciudad del clima se elige de una lista fija, sin usar GPS; la búsqueda de etiquetas solo envía a Open Food Facts el término que escribes. No incluyas datos personales en esa búsqueda.
 
 | Fuente                                             | Uso                                 | Licencia                    |
 | -------------------------------------------------- | ----------------------------------- | --------------------------- |
 | [Open-Meteo](https://open-meteo.com)               | Pronóstico de 14 días por ciudad    | Uso no comercial, CC BY 4.0 |
 | [Nager.Date](https://date.nager.at)                | Días festivos de México             | MIT                         |
 | [Open Prices](https://prices.openfoodfacts.org)    | Precios vistos en anaquel           | AGPL-3.0 (datos ODbL)       |
-| [Open Food Facts](https://world.openfoodfacts.org) | Conteo de productos por ingrediente | ODbL                        |
+| [Open Food Facts](https://world.openfoodfacts.org) | Productos, etiquetas y búsqueda iniciada por la persona usuaria | ODbL |
 | [TheMealDB](https://www.themealdb.com)             | Ideas y recetas mexicanas           | Ver sitio                   |
 | [Wikipedia en español](https://es.wikipedia.org)   | Descripción de ingredientes         | CC BY-SA 4.0                |
 | [GitHub REST](https://docs.github.com/rest)        | Datos públicos de este repositorio  | Ver sitio                   |
 
-Las respuestas se validan con zod, tienen tiempo y tamaño máximos, y se guardan en caché: memoria del proceso y la tabla `price_cache` (con índices por clave y por fecha; ver `migrations/0002_market.sql`).
+Las respuestas públicas se validan, tienen límites de tiempo y tamaño, y se guardan en caché: hasta seis horas como datos recientes y, si una fuente falla, se puede usar una copia de hasta siete días. Se comparte entre memoria y la tabla `price_cache`; se conservan los índices por clave y fecha, ya que este último acelera la purga periódica de filas vencidas. Las búsquedas de Open Food Facts se limitan y deduplican en el servidor, quedan solo en memoria hasta 30 minutos y no se guardan en la base de datos.
 
 ## Desarrollo
 
