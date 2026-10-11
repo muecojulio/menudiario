@@ -56,9 +56,6 @@ export function PrivacyContent({ compact = false }: { compact?: boolean }) {
             <span className="text-fg">Wikipedia en español</span> (CC BY-SA): descripciones de
             ingredientes.
           </li>
-          <li>
-            <span className="text-fg">GitHub</span>: datos públicos del repositorio de la app.
-          </li>
         </ul>
         <p>
           Si usas “Explora etiquetas”, el término de producto que escribiste se envía a nuestro
