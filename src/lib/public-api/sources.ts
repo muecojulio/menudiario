@@ -38,7 +38,6 @@ export const PUBLIC_SOURCES = {
   holidays: (year: number) => `https://date.nager.at/api/v3/PublicHolidays/${year}/MX`,
   wikiSummary: (title: string) =>
     `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`,
-  githubRepo: "https://api.github.com/repos/muecojulio/menudiario",
 } as const;
 
 /** Hosts a los que puede apuntar una imagen o un enlace que mostramos. */
@@ -51,6 +50,5 @@ export const PAGE_HOSTS = [
   "es.wikipedia.org",
   "www.youtube.com",
   "youtube.com",
-  "github.com",
   "world.openfoodfacts.org",
 ] as const;

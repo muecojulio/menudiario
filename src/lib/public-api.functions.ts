@@ -17,9 +17,7 @@ import {
   parseHolidays,
   parseMealDetail,
   parseOpenFoodFactsCount,
-  parseRepo,
   parseWikiSummary,
-  type RepoInfo,
   type WikiSummary,
 } from "./public-api/parsers.ts";
 import { PUBLIC_SOURCES } from "./public-api/sources.ts";
@@ -176,18 +174,3 @@ export const getMealDetail = createServerFn({ method: "GET" })
     );
     return cached?.data ?? null;
   });
-
-// ---------- Repositorio público (GitHub REST, sin clave) ----------
-
-export const getRepoInfo = createServerFn({ method: "GET" }).handler(
-  async (): Promise<RepoInfo | null> => {
-    const cached = await cachedLoad(
-      "mx-repo",
-      6 * HOUR,
-      async () =>
-        parseRepo(await fetchJson(PUBLIC_SOURCES.githubRepo, { allowedHosts: ["api.github.com"] })),
-      (raw) => (isRecordLike(raw) && typeof raw.name === "string" ? (raw as RepoInfo) : null),
-    );
-    return cached?.data ?? null;
-  },
-);

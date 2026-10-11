@@ -4,6 +4,7 @@ import type { Prefs } from "@/lib/storage";
 import { money } from "@/lib/format";
 import type { MarketLive } from "@/lib/market.functions";
 import { ActionButton, type ActionStatus } from "@/components/ui/action-button";
+import { FoodSearch } from "@/components/food-search";
 import { Combobox } from "@/components/ui/combobox";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { CARD, ShelfNote, Stepper, Toggle } from "./parts";
@@ -184,6 +185,7 @@ export function PlanPanel({
       </ActionButton>
 
       <ShelfNote live={live} matches={matches} />
+      <FoodSearch />
     </section>
   );
 }

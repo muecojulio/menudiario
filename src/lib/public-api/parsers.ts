@@ -216,34 +216,3 @@ export function parseForecast(payload: Json): DayForecast[] {
   }
   return out;
 }
-
-// ---------- Repositorio (GitHub) ----------
-
-export type RepoInfo = {
-  name: string;
-  url: string;
-  stars: number;
-  pushedAt: string | null;
-  license: string | null;
-  description: string | null;
-};
-
-export function parseRepo(payload: Json): RepoInfo | null {
-  if (!isRecord(payload)) return null;
-  const name = cleanText(payload.full_name, 120);
-  const url = safePageUrl(payload.html_url);
-  if (!name || !url) return null;
-  const pushed =
-    typeof payload.pushed_at === "string" && !Number.isNaN(Date.parse(payload.pushed_at))
-      ? payload.pushed_at
-      : null;
-  const license = isRecord(payload.license) ? cleanText(payload.license.spdx_id, 30) : null;
-  return {
-    name,
-    url,
-    stars: Math.max(0, Math.floor(finiteNumber(payload.stargazers_count) ?? 0)),
-    pushedAt: pushed,
-    license: license && license !== "NOASSERTION" ? license : null,
-    description: cleanText(payload.description, 160),
-  };
-}
