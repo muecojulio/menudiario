@@ -11,23 +11,44 @@
   --color-line: color-mix(in srgb, #f4f0e6 14%, transparent);
   --color-clay: #e08a45;
   --color-clay-soft: color-mix(in srgb, #e08a45 18%, #1c1916);
+  --color-chile: #d9583f;
   --font-sans: "Outfit Variable", "Outfit", system-ui, sans-serif;
   --font-display: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --animate-fade-in: fade-in 200ms ease-out both;
+  --animate-fade-out: fade-out 160ms ease-in both;
+  --animate-sheet-in: sheet-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-sheet-out: sheet-out 180ms ease-in both;
 }
 
 @layer base {
   html {
     color-scheme: dark;
+    overflow-x: hidden;
   }
 
   body {
     margin: 0;
     min-height: 100vh;
+    overflow-x: hidden;
     background: var(--color-bg);
     color: var(--color-fg);
     font-family: var(--font-sans);
     font-size: 16px;
     line-height: 1.5;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  [role="tab"],
+  [role="radio"],
+  [role="checkbox"],
+  [role="option"],
+  [role="switch"],
+  input,
+  select,
+  textarea,
+  a {
+    touch-action: manipulation;
   }
 
   button:not(:disabled),
@@ -47,32 +68,185 @@
   }
 }
 
-.press {
-  transition:
-    scale 150ms ease-out,
-    background-color 180ms ease-out,
-    color 180ms ease-out,
-    border-color 180ms ease-out;
+/* Componentes: van en una capa para que las utilidades de Tailwind puedan ajustarlos. */
+@layer components {
+  .press {
+    transition:
+      scale 150ms ease-out,
+      background-color 180ms ease-out,
+      color 180ms ease-out,
+      border-color 180ms ease-out,
+      filter 180ms ease-out;
+  }
+
+  /* Hover sutil solo con puntero fino; el toque no deja el botón "pegado". */
+  @media (hover: hover) and (pointer: fine) {
+    .press:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+  }
+
+  .press:active:not(:disabled) {
+    scale: 0.96;
+  }
+
+  .field {
+    transition:
+      border-color 180ms ease-out,
+      box-shadow 180ms ease-out;
+  }
+
+  .field:focus {
+    outline: none;
+    border-color: var(--color-clay);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-clay) 40%, transparent);
+  }
+
+  .rise {
+    animation: rise 420ms ease-out both;
+  }
+
+  .delay-1 {
+    animation-delay: 70ms;
+  }
+
+  .delay-2 {
+    animation-delay: 140ms;
+  }
+
+  .delay-3 {
+    animation-delay: 210ms;
+  }
+
+  .anim-pop {
+    animation: pop 320ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  }
+
+  .anim-shake {
+    animation: shake 380ms ease-in-out both;
+  }
+
+  /* Carriles nativos: scroll horizontal del navegador, sin barra visible y con bordes difuminados solo si hace falta. */
+  .rail,
+  .carousel-track {
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .rail::-webkit-scrollbar,
+  .carousel-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rail {
+    scroll-padding-inline: 1.25rem;
+    margin-inline: -1.25rem;
+    padding-inline: 1.25rem;
+  }
+
+  .rail[data-fade-start="true"][data-fade-end="true"] {
+    mask-image: linear-gradient(
+      90deg,
+      transparent,
+      #000 1.25rem,
+      #000 calc(100% - 1.25rem),
+      transparent
+    );
+  }
+
+  .rail[data-fade-start="true"]:not([data-fade-end="true"]) {
+    mask-image: linear-gradient(90deg, transparent, #000 1.25rem);
+  }
+
+  .rail[data-fade-start="false"][data-fade-end="true"] {
+    mask-image: linear-gradient(90deg, #000 calc(100% - 1.25rem), transparent);
+  }
+
+  .carousel-track {
+    scroll-padding-inline: 1.25rem;
+    margin-inline: -1.25rem;
+    padding-inline: 1.25rem;
+    border-radius: 1rem;
+  }
+
+  .carousel-track:focus-visible {
+    outline-offset: 4px;
+  }
+
+  /* Filas con acciones: en táctil se revelan deslizando; en puntero fino, las acciones quedan a la derecha. */
+  .swipe-row {
+    touch-action: pan-y;
+  }
+
+  .swipe-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .swipe-row {
+      touch-action: pan-y;
+    }
+
+    .swipe-actions {
+      position: absolute;
+      inset-block: 0;
+      right: 0;
+      width: 192px;
+      gap: 0;
+      transition: none;
+    }
+
+    .swipe-actions > button {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .swipe-row[data-open] .swipe-surface {
+      box-shadow: -10px 0 18px -14px rgba(0, 0, 0, 0.8);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .swipe-row {
+      display: flex;
+      align-items: stretch;
+      gap: 0.5rem;
+      overflow: visible;
+    }
+
+    .swipe-surface {
+      flex: 1 1 auto;
+      min-width: 0;
+      transform: none !important;
+      transition: none !important;
+    }
+
+    .swipe-actions {
+      flex-shrink: 0;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 180ms ease-out;
+    }
+
+    .swipe-row:hover .swipe-actions,
+    .swipe-row:focus-within .swipe-actions {
+      opacity: 1;
+    }
+
+    .swipe-actions > button {
+      width: 5.5rem;
+      border-radius: 1rem;
+    }
+
+    .swipe-toggle {
+      display: none;
+    }
+  }
 }
 
-.press:active:not(:disabled) {
-  scale: 0.96;
-}
-
-.rise {
-  animation: rise 420ms ease-out both;
-}
-
-.delay-1 {
-  animation-delay: 70ms;
-}
-
-.delay-2 {
-  animation-delay: 140ms;
-}
-
-.delay-3 {
-  animation-delay: 210ms;
+.dock {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 @keyframes rise {
@@ -88,18 +262,81 @@
   }
 }
 
-.dock {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+@keyframes pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+/* Movimiento reducido: sin animaciones de entrada, transiciones instantáneas y desplazamiento sin suavizado. */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+
   .rise {
     animation: none;
   }
 
   .press,
   .press:active {
-    transition: none;
     scale: 1;
   }
 }

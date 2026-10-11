@@ -205,7 +205,7 @@ function balanceScore(choices: DayChoice[]): number {
 }
 
 function diversify(choices: DayChoice[], input: PlanInput, slots: RecipeSlot[], budget: number): DayChoice[] {
-  let current = cloneChoices(choices);
+  const current = cloneChoices(choices);
   const factor = storeById(input.storeId).factor;
   const seen = new Set<string>([JSON.stringify(current)]);
 

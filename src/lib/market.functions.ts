@@ -1,18 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
+import { cachedLoad } from "./public-api/cache.server.ts";
+import { fetchJson } from "./public-api/http.server.ts";
+import {
+  type MealCard,
+  parseMealList,
+  parseOpenFoodFactsCount,
+  parseShelf,
+  type ShelfItem,
+} from "./public-api/parsers.ts";
+import { PUBLIC_SOURCES } from "./public-api/sources.ts";
 
-export type ShelfItem = {
-  name: string;
-  price: number;
-  store: string;
-  date: string;
-};
+export type { ShelfItem } from "./public-api/parsers.ts";
 
 export type MarketLive = {
   ok: boolean;
   fetchedAt: string | null;
   fromCache: boolean;
   shelf: ShelfItem[];
-  mexicanMeals: string[];
+  meals: MealCard[];
   sources: {
     openPrices: boolean;
     mealDb: boolean;
@@ -20,140 +25,56 @@ export type MarketLive = {
   };
 };
 
-const CACHE_KEY = "mx-shelf-v1";
+const CACHE_KEY = "mx-market-v2";
 const SIX_HOURS = 6 * 60 * 60 * 1000;
-const AGENT = "Menudiario/1.0 (https://github.com/muecojulio/menudiario)";
 
-async function readJson(url: string): Promise<unknown | null> {
-  try {
-    const response = await fetch(url, {
-      headers: { Accept: "application/json", "User-Agent": AGENT },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!response.ok) return null;
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
+const EMPTY: MarketLive = {
+  ok: false,
+  fetchedAt: null,
+  fromCache: false,
+  shelf: [],
+  meals: [],
+  sources: { openPrices: false, mealDb: false, openFoodFacts: false },
+};
 
-function asShelf(payload: unknown): ShelfItem[] {
-  if (!payload || typeof payload !== "object") return [];
-  const items = (payload as { items?: unknown }).items;
-  if (!Array.isArray(items)) return [];
-  const shelf: ShelfItem[] = [];
-  for (const item of items) {
-    if (!item || typeof item !== "object") continue;
-    const row = item as {
-      price?: unknown;
-      date?: unknown;
-      product?: { product_name?: unknown };
-      location?: { osm_brand?: unknown; osm_name?: unknown };
-    };
-    const name = typeof row.product?.product_name === "string" ? row.product.product_name.trim() : "";
-    const price = typeof row.price === "number" ? row.price : Number(row.price);
-    if (!name || !Number.isFinite(price) || price <= 0 || price > 400) continue;
-    const storeRaw = row.location?.osm_brand || row.location?.osm_name;
-    const store = typeof storeRaw === "string" && storeRaw.trim() ? storeRaw.trim() : "Tienda";
-    const date = typeof row.date === "string" ? row.date : "";
-    shelf.push({ name, price, store, date });
-  }
-  return shelf;
-}
-
-function mealNames(payload: unknown): string[] {
-  if (!payload || typeof payload !== "object") return [];
-  const meals = (payload as { meals?: unknown }).meals;
-  if (!Array.isArray(meals)) return [];
-  return meals
-    .map((meal) => (meal && typeof meal === "object" ? (meal as { strMeal?: unknown }).strMeal : null))
-    .filter((name): name is string => typeof name === "string" && name.length > 0);
-}
-
-function canUseDatabase(): boolean {
-  const hasDatabase = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL.trim());
-  return hasDatabase || process.env.NODE_ENV !== "production";
-}
-
-async function readCache(): Promise<MarketLive | null> {
-  if (!canUseDatabase()) return null;
-  try {
-    const { getSql } = await import("@/lib/db");
-    const sql = await getSql();
-    const cached = await sql<{ payload: string; fetched_at: string | Date }>`
-      select payload, fetched_at from price_cache where cache_key = ${CACHE_KEY}
-    `;
-    const row = cached[0];
-    if (!row) return null;
-    const fetchedAt = new Date(row.fetched_at).toISOString();
-    const fresh = Date.now() - new Date(fetchedAt).getTime() < SIX_HOURS;
-    if (!fresh) return null;
-    const parsed = JSON.parse(row.payload) as MarketLive;
-    return { ...parsed, fromCache: true, fetchedAt };
-  } catch {
-    return null;
-  }
-}
-
-async function writeCache(live: MarketLive): Promise<void> {
-  if (!canUseDatabase()) return;
-  try {
-    const { getSql } = await import("@/lib/db");
-    const sql = await getSql();
-    await sql`
-      insert into price_cache (cache_key, payload, fetched_at)
-      values (${CACHE_KEY}, ${JSON.stringify(live)}, now())
-      on conflict (cache_key) do update
-        set payload = excluded.payload, fetched_at = now()
-    `;
-  } catch {
-    /* la consulta en vivo sigue aunque la caché falle */
-  }
-}
-
-async function loadFresh(): Promise<MarketLive> {
+async function loadFresh(): Promise<MarketLive | null> {
   const [prices, page2, meals, foods] = await Promise.all([
-    readJson("https://prices.openfoodfacts.org/api/v1/prices?currency=MXN&page=1"),
-    readJson("https://prices.openfoodfacts.org/api/v1/prices?currency=MXN&page=2"),
-    readJson("https://www.themealdb.com/api/json/v1/1/filter.php?a=Mexican"),
-    readJson(
-      "https://world.openfoodfacts.org/cgi/search.pl?search_terms=leche&search_simple=1&action=process&json=1&page_size=1&cc=mx",
-    ),
+    fetchJson(PUBLIC_SOURCES.shelfPrices(1), { allowedHosts: ["prices.openfoodfacts.org"] }),
+    fetchJson(PUBLIC_SOURCES.shelfPrices(2), { allowedHosts: ["prices.openfoodfacts.org"] }),
+    fetchJson(PUBLIC_SOURCES.mealDbMexican, { allowedHosts: ["www.themealdb.com"] }),
+    fetchJson(PUBLIC_SOURCES.openFoodFactsCount("leche"), {
+      allowedHosts: ["world.openfoodfacts.org"],
+    }),
   ]);
-  const shelf = [...asShelf(prices), ...asShelf(page2)].slice(0, 40);
-  const mexicanMeals = mealNames(meals);
-  const openFoodFacts = Boolean(
-    foods && typeof foods === "object" && Number((foods as { count?: unknown }).count) > 0,
-  );
-  return {
-    ok: shelf.length > 0 || mexicanMeals.length > 0 || openFoodFacts,
+  const shelf = [...parseShelf(prices), ...parseShelf(page2)].slice(0, 40);
+  const mealCards = parseMealList(meals);
+  const openFoodFacts = parseOpenFoodFactsCount(foods) > 0;
+  const live: MarketLive = {
+    ok: shelf.length > 0 || mealCards.length > 0 || openFoodFacts,
     fetchedAt: new Date().toISOString(),
     fromCache: false,
     shelf,
-    mexicanMeals,
+    meals: mealCards,
     sources: {
       openPrices: shelf.length > 0,
-      mealDb: mexicanMeals.length > 0,
+      mealDb: mealCards.length > 0,
       openFoodFacts,
     },
   };
+  return live.ok ? live : null;
 }
 
-export const getMarketLive = createServerFn({ method: "GET" }).handler(async (): Promise<MarketLive> => {
-  const cached = await readCache();
-  if (cached) return cached;
-  try {
-    const live = await loadFresh();
-    if (live.ok) await writeCache(live);
-    return live;
-  } catch {
-    return {
-      ok: false,
-      fetchedAt: null,
-      fromCache: false,
-      shelf: [],
-      mexicanMeals: [],
-      sources: { openPrices: false, mealDb: false, openFoodFacts: false },
-    };
-  }
-});
+function asMarket(raw: unknown): MarketLive | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Partial<MarketLive>;
+  if (!Array.isArray(row.shelf) || !Array.isArray(row.meals)) return null;
+  return row as MarketLive;
+}
+
+export const getMarketLive = createServerFn({ method: "GET" }).handler(
+  async (): Promise<MarketLive> => {
+    const cached = await cachedLoad(CACHE_KEY, SIX_HOURS, loadFresh, asMarket);
+    if (!cached) return EMPTY;
+    return { ...cached.data, ok: true, fetchedAt: cached.fetchedAt, fromCache: cached.fromCache };
+  },
+);
