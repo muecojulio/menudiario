@@ -187,11 +187,6 @@ export function MenuApp() {
     setTab("plan");
   }
 
-  function install() {
-    const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    window.location.assign(`/?install=1&platform=${ios ? "ios" : "android"}`);
-  }
-
   return (
     <div className="mx-auto min-h-screen max-w-lg pb-32">
       <header className="sticky top-0 z-10 border-b border-line bg-bg/95 px-5 py-4 backdrop-blur">
@@ -271,12 +266,7 @@ export function MenuApp() {
         </PanelFrame>
 
         <PanelFrame value="mas" active={tab === "mas"}>
-          <MorePanel
-            live={live}
-            onInstall={install}
-            onPrivacy={() => setTab("privacidad")}
-            onClear={clearAll}
-          />
+          <MorePanel live={live} onClear={clearAll} />
         </PanelFrame>
       </div>
 
